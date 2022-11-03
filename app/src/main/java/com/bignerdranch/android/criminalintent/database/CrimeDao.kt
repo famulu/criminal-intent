@@ -1,8 +1,8 @@
-package com.bignerdranch.criminalintent.database
+package com.bignerdranch.android.criminalintent.database
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.bignerdranch.criminalintent.Crime
+import com.bignerdranch.android.criminalintent.Crime
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
