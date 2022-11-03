@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -32,7 +31,7 @@ class CrimeDetailFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentCrimeDetailBinding.inflate(layoutInflater, container, false)
+        _binding = FragmentCrimeDetailBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -68,7 +67,7 @@ class CrimeDetailFragment : Fragment() {
             }
         }
 
-        val callback = requireActivity().onBackPressedDispatcher.addCallback(this, true) {
+        requireActivity().onBackPressedDispatcher.addCallback(this, true) {
             if (crimeDetailViewModel.crime.value?.title.isNullOrEmpty()) {
                 Toast.makeText(context, "Please add a title", Toast.LENGTH_SHORT).show()
             } else {
