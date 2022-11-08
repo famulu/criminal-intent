@@ -40,5 +40,4 @@ class CrimeDetailViewModelFactory(private val crimeId: UUID) : ViewModelProvider
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return CrimeDetailViewModel(crimeId) as T
     }
-
 }

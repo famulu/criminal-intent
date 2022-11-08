@@ -4,12 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/crimeListFragment">
-
     <fragment
         android:id="@+id/crimeListFragment"
         android:name="com.bignerdranch.android.criminalintent.CrimeListFragment"
-        tools:layout="@layout/fragment_crime_list"
-        android:label="CrimeListFragment" >
+        android:label="CrimeListFragment"
+        tools:layout="@layout/fragment_crime_list">
         <action
             android:id="@+id/show_crime_detail"
             app:destination="@id/crimeDetailFragment" />
@@ -17,8 +16,8 @@
     <fragment
         android:id="@+id/crimeDetailFragment"
         android:name="com.bignerdranch.android.criminalintent.CrimeDetailFragment"
-        tools:layout="@layout/fragment_crime_detail"
-        android:label="CrimeDetailFragment" >
+        android:label="CrimeDetailFragment"
+        tools:layout="@layout/fragment_crime_detail">
         <argument
             android:name="crimeId"
             app:argType="java.util.UUID" />

@@ -22,6 +22,7 @@ class CrimeRepository private constructor(
     fun getCrimes(): Flow<List<Crime>> = database.crimeDao().getCrimes()
 
     suspend fun getCrime(id: UUID): Crime = database.crimeDao().getCrime(id)
+
     fun updateCrime(crime: Crime) {
         coroutineScope.launch {
             database.crimeDao().updateCrime(crime)
