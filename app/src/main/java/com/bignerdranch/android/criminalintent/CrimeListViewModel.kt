@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-private const val TAG = "CrimeListViewModel"
-
 class CrimeListViewModel : ViewModel() {
     private val crimeRepository = CrimeRepository.get()
 
@@ -22,5 +20,9 @@ class CrimeListViewModel : ViewModel() {
                 _crimes.value = it
             }
         }
+    }
+
+    suspend fun addCrime(crime: Crime) {
+        crimeRepository.addCrime(crime)
     }
 }

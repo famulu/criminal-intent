@@ -1,9 +1,7 @@
 package com.bignerdranch.android.criminalintent
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -13,6 +11,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bignerdranch.android.criminalintent.databinding.FragmentCrimeListBinding
 import kotlinx.coroutines.launch
+import java.util.*
 
 class CrimeListFragment : Fragment() {
     private val crimeListViewModel: CrimeListViewModel by viewModels()
@@ -21,6 +20,11 @@ class CrimeListFragment : Fragment() {
         get() = checkNotNull(_binding) {
             "Cannot access binding because it is null. Is the view visible?"
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -37,7 +41,11 @@ class CrimeListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 crimeListViewModel.crimes.collect { crimes ->
                     binding.crimeRecyclerView.adapter = CrimeListAdapter(crimes) { crimeId ->
-                        findNavController().navigate(CrimeListFragmentDirections.showCrimeDetail(crimeId))
+                        findNavController().navigate(
+                            CrimeListFragmentDirections.showCrimeDetail(
+                                crimeId
+                            )
+                        )
                     }
                 }
             }
@@ -47,5 +55,33 @@ class CrimeListFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime_list, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.new_crime -> {
+                showNewCrime()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showNewCrime() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val newCrime = Crime(
+                id = UUID.randomUUID(),
+                title = "",
+                date = Date(),
+                isSolved = false
+            )
+            crimeListViewModel.addCrime(newCrime)
+            findNavController().navigate(CrimeListFragmentDirections.showCrimeDetail(newCrime.id))
+        }
     }
 }
