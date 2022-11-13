@@ -37,9 +37,15 @@ class CrimeListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.addCrime.setOnClickListener {
+            showNewCrime()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 crimeListViewModel.crimes.collect { crimes ->
+                    binding.defaultText.visibility = if (crimes.isEmpty()) View.VISIBLE else View.GONE
+                    binding.addCrime.visibility = binding.defaultText.visibility
                     binding.crimeRecyclerView.adapter = CrimeListAdapter(crimes) { crimeId ->
                         findNavController().navigate(
                             CrimeListFragmentDirections.showCrimeDetail(
