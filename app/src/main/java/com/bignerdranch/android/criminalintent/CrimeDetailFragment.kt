@@ -1,5 +1,6 @@
 package com.bignerdranch.android.criminalintent
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
@@ -7,10 +8,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
@@ -25,6 +28,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 private const val DATE_FORMAT = "EEE, MMM, dd"
+private const val TAG = "CrimeDetailFragment"
 
 class CrimeDetailFragment : Fragment() {
     private var _binding: FragmentCrimeDetailBinding? = null
@@ -37,11 +41,18 @@ class CrimeDetailFragment : Fragment() {
         CrimeDetailViewModelFactory(args.crimeId)
     }
 
+    private var hasPermission = false
+
     private val selectSuspect = registerForActivityResult(
         ActivityResultContracts.PickContact()
     ) { uri: Uri? ->
         uri?.let { parseContactSelection(it) }
     }
+
+    private val requestPermissionLauncher = registerForActivityResult(RequestPermission()) { isGranted: Boolean ->
+        hasPermission = isGranted
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +84,8 @@ class CrimeDetailFragment : Fragment() {
             }
 
             crimeSuspect.setOnClickListener {
+                Log.d(TAG, "Meow")
+                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                 selectSuspect.launch(null)
             }
 
@@ -164,6 +177,16 @@ class CrimeDetailFragment : Fragment() {
             crimeSuspect.text = crime.suspect.ifEmpty {
                 getString(R.string.crime_suspect_text)
             }
+
+            callSuspect.isEnabled = crime.suspect.isNotEmpty()
+            callSuspect.setOnClickListener {
+                Log.d(TAG, crime.suspectPhone)
+                val numberUri = Uri.parse("tel:" + crime.suspectPhone)
+                Log.d(TAG, numberUri.toString())
+                val intent = Intent(Intent.ACTION_DIAL)
+                intent.data = numberUri
+                startActivity(intent)
+            }
         }
     }
 
@@ -188,7 +211,7 @@ class CrimeDetailFragment : Fragment() {
     }
 
     private fun parseContactSelection(contactUri: Uri) {
-        val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+        val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts._ID, ContactsContract.Contacts.HAS_PHONE_NUMBER)
 
         val queryCursor = requireActivity().contentResolver.query(contactUri, queryFields, null, null, null)
 
@@ -197,6 +220,22 @@ class CrimeDetailFragment : Fragment() {
                 val suspect = cursor.getString(0)
                 crimeDetailViewModel.updateCrime { oldCrime ->
                     oldCrime.copy(suspect = suspect)
+                }
+                val id = cursor.getLong(1)
+                Log.d(TAG, id.toString())
+                val hasPhoneNumber = cursor.getInt(2)
+                Log.d(TAG, hasPhoneNumber.toString())
+                if (hasPhoneNumber == 1 && hasPermission) {
+                    val phoneCursor = requireActivity().contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null)
+                    phoneCursor?.use { phoneCursor ->
+                        if (phoneCursor.moveToFirst()) {
+                            val contactNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            Log.d(TAG, contactNumber)
+                            crimeDetailViewModel.updateCrime { oldCrime ->
+                                oldCrime.copy(suspectPhone = contactNumber)
+                             }
+                        }
+                    }
                 }
             }
         }
