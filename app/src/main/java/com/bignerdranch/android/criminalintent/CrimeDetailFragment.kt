@@ -178,7 +178,7 @@ class CrimeDetailFragment : Fragment() {
                 getString(R.string.crime_suspect_text)
             }
 
-            callSuspect.isEnabled = crime.suspect.isNotEmpty()
+            callSuspect.isEnabled = crime.suspectPhone.isNotEmpty()
             callSuspect.setOnClickListener {
                 Log.d(TAG, crime.suspectPhone)
                 val numberUri = Uri.parse("tel:" + crime.suspectPhone)
@@ -222,20 +222,29 @@ class CrimeDetailFragment : Fragment() {
                     oldCrime.copy(suspect = suspect)
                 }
                 val id = cursor.getLong(1)
-                Log.d(TAG, id.toString())
                 val hasPhoneNumber = cursor.getInt(2)
-                Log.d(TAG, hasPhoneNumber.toString())
-                if (hasPhoneNumber == 1 && hasPermission) {
-                    val phoneCursor = requireActivity().contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null)
-                    phoneCursor?.use { phoneCursor ->
-                        if (phoneCursor.moveToFirst()) {
-                            val contactNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                            Log.d(TAG, contactNumber)
-                            crimeDetailViewModel.updateCrime { oldCrime ->
-                                oldCrime.copy(suspectPhone = contactNumber)
-                             }
-                        }
+                if (hasPhoneNumber == 0) {
+                    crimeDetailViewModel.updateCrime { oldCrime ->
+                        oldCrime.copy(suspectPhone = "")
                     }
+                }
+                else if (hasPermission) {
+                    getPhoneNumber(id)
+                }
+            }
+        }
+    }
+
+    private fun getPhoneNumber(contactId: Long) {
+        val queryFields = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+        val selection = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?"
+        val selectionArgs = arrayOf(contactId.toString())
+        val phoneCursor = requireActivity().contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, queryFields, selection, selectionArgs, null)
+        phoneCursor?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val contactNumber = cursor.getString(0)
+                crimeDetailViewModel.updateCrime { oldCrime ->
+                    oldCrime.copy(suspectPhone = contactNumber)
                 }
             }
         }
