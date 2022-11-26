@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -25,9 +26,10 @@ import androidx.navigation.fragment.navArgs
 import com.bignerdranch.android.criminalintent.databinding.FragmentCrimeDetailBinding
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.Date
+import java.util.*
 
 private const val DATE_FORMAT = "EEE, MMM, dd"
+private const val TAG = "CrimeDetailFragment"
 
 class CrimeDetailFragment : Fragment() {
     private var _binding: FragmentCrimeDetailBinding? = null
@@ -46,13 +48,14 @@ class CrimeDetailFragment : Fragment() {
         uri?.let { parseContactSelection(it) }
     }
 
-    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { didTakePhoto ->
-        if (didTakePhoto && photoName != null) {
-            crimeDetailViewModel.updateCrime { oldCrime ->
-                oldCrime.copy(photoFileName = photoName)
+    private val takePhoto =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { didTakePhoto ->
+            if (didTakePhoto && photoName != null) {
+                crimeDetailViewModel.updateCrime { oldCrime ->
+                    oldCrime.copy(photoFileName = photoName)
+                }
             }
         }
-    }
 
     private var photoName: String? = null
 
@@ -198,6 +201,17 @@ class CrimeDetailFragment : Fragment() {
             }
 
             updatePhoto(crime.photoFileName)
+
+            if (crime.photoFileName != null) {
+                crimePhoto.setOnClickListener {
+                    Log.d(TAG, "crimePhoto clicked!")
+                    findNavController().navigate(
+                        CrimeDetailFragmentDirections.showDetailedCrimePhoto(crime.photoFileName)
+                    )
+                }
+            } else {
+                crimePhoto.isEnabled = false
+            }
         }
     }
 
@@ -224,7 +238,8 @@ class CrimeDetailFragment : Fragment() {
     private fun parseContactSelection(contactUri: Uri) {
         val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
 
-        val queryCursor = requireActivity().contentResolver.query(contactUri, queryFields, null, null, null)
+        val queryCursor =
+            requireActivity().contentResolver.query(contactUri, queryFields, null, null, null)
 
         queryCursor?.use { cursor ->
             if (cursor.moveToFirst()) {
@@ -238,7 +253,8 @@ class CrimeDetailFragment : Fragment() {
 
     private fun canResolveIntent(intent: Intent): Boolean {
         val packageManager = requireActivity().packageManager
-        val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        val resolvedActivity: ResolveInfo? =
+            packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
         return resolvedActivity != null
     }
 
